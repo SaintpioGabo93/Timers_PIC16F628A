@@ -3,7 +3,9 @@
  __CONFIG _FOSC_INTOSCCLK & _WDTE_OFF & _PWRTE_OFF & _MCLRE_OFF & _BOREN_ON & _LVP_OFF & _CPD_OFF & _CP_OFF
 
 ;Configuracion de variables para el codigo
-    temp1 equ 0x20 ; Creamos una variable de nombre temp1 en la direccion 0x20 de la memoria de datos
+    cblock  0x20    ; El cblock nos permite de manera eficiente, asignar un espacio de memoria consecutivo a partir de la direccion por el numero de variables que asignamos
+    ; temp1 esta variable la vamos a poner el el archivo de inclusion
+    endc
 
 ;Configuracion del pic y todas sus palabras claves
     list p=16f628a
@@ -21,29 +23,17 @@
 
 ; Encedemos el LED
     bsf     PORTB, 0    ; El bit 0 del PORTB, queda en HIGH
-    movlw   .100        ; Cargamos el número 100 al registro W
+    movlw   .1500        ; Cargamos el número 100 al registro W. Estos son los milisegundos que haremos
     call    delay_ms    ; Llamamos a la función delay_ms para que se tarde la cantidad de tiempo que
 
 ; Apagamos el LED
     bcf     PORTB, 0    ; El bit 0 del PORTB, queda en LOW
-    movlw   .100        ; Cargamos el número 100 al registro W
+    movlw   .1500        ; Cargamos el número 100 al registro W
     call    delay_ms    ; Llamamos a la función de retardo
     goto    $-6         ; Regresamos a bsf PORTB, 0, o sea a HIGH
 
-; Parte de la función para que el bucle del milisegundo se ejecute 100 veces
-delay_ms:
-    movwf   temp1      ; Movemos la información que teníamos cargada en movlw a la variable temp1
-    call    delay_1ms  ; Vamos a la función de 1 milisegundo
-    decfsz  temp1, 1   ; Si el destino (1) vale 0, el valor se asigna a W, si el destino(1) vale 1, entonces temp1 = temp1 - 1, y si temp1 - 1 = 0 entonces salta una instrucción
-    goto    $-2        ; Si la instrucción anterior no fue 0, llega a esta instrucción para regresar a la función delay_1ms 
-    return
-
-; Creamos el bucle para contar el milisegundo
-delay_1ms:
-    clrf    TMR0      ; Ponemos el TMR0, todo a cero
-    btfss   TMR0, 2   ; Testeamos el bit 2 hasta que dé 1, recordemos que como ya configuramos el OPTION_REG en sus últimos 3 bits a uno, ya se va a tardar 256 microsegundos
-    goto    $-1       ; En caso de que no sea 1 el bit anterior, llegará a esta instrucción y regresará a la instrucción anterior hasta que se cumpla la condición
-    return            ; Esto ocurre cuando llega al valor, porque se salta una instrucción con la instrucción btfss
+    ; Vamos a utilizar el archivo de inclusion que hicimos al que le pusimos el codigo para el delay
+    #include <delay.INC>
     end
 
     
